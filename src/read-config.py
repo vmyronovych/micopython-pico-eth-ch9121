@@ -4,8 +4,14 @@ import time
 READ_DESTINATION_PORT_NUMBER = 0x66
 READ_SOURCE_PORT_NUMBER = 0x64
 
+READ_DEVICE_IP_ADDRESS = 0x61
+
 def readInt(uart, command):
     return int.from_bytes(read(uart, command),'little')
+
+def readIPAsString(uart, command):
+    ipBytes = read(uart, command)
+    return "{}.{}.{}.{}".format(ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3])
 
 def read(uart, command):
     fullCommand = [0x57, 0xab]
@@ -25,6 +31,7 @@ time.sleep(0.1)
 
 print(readInt(uart0, READ_DESTINATION_PORT_NUMBER))
 print(readInt(uart0, READ_SOURCE_PORT_NUMBER))
+print(readIPAsString(uart0, READ_DEVICE_IP_ADDRESS))
 
 CFG.value(1)
 time.sleep(0.1)
