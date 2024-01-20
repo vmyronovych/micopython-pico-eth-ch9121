@@ -31,7 +31,7 @@ time.sleep(0.1)
 
 print(readInt(uart0, READ_DESTINATION_PORT_NUMBER))
 print(readInt(uart0, READ_SOURCE_PORT_NUMBER))
-print(readIPAsString(uart0, READ_DEVICE_IP_ADDRESS))
+print(readIpString(uart0, READ_DEVICE_IP_ADDRESS))
 
 CFG.value(1)
 time.sleep(0.1)
