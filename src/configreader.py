@@ -120,6 +120,12 @@ READ_SERIAL_PORT_2_BAUD_RATE = 0x94
 #   0x04: None
 READ_SERIAL_PORT_2_STOP_CHECK_DATA_BITS = 0x95
 
+#Serial port's timeout time (in ms) for chip's serial port 2
+#Methods:
+#   readInt
+#Possible values: integer
+READ_SERIAL_PORT_2_TIMEOUT_TIME = 0x96
+
 def readInt(uart, command):
     return int.from_bytes(read(uart, command),'little')
 
@@ -147,24 +153,35 @@ def read(uart, command):
         time.sleep(0.01)
 
 def printAll(uart):
-    print(readInt(uart, READ_PORT_1_NETWORK_MODE))
+    
+    uart.read() # flusing uart buffer before reading settings
 
-    print(readInt(uart, READ_DESTINATION_PORT_1_NUMBER))
-    print(readInt(uart, READ_DEVICE_PORT_1_NUMBER))
+    print("\nDevice Network")
+    print("==============")
+    
+    print(f'IP:                      {readIpString(uart, READ_DEVICE_IP_ADDRESS)}')
+    print(f'Gateway:                 {readIpString(uart, READ_DEVICE_SUBNET_MASK)}')
+    print(f'Subnet:                  {readIpString(uart, READ_GATEWAY_IP_ADDRESS)}')
+    print(f'MAC:                     {readMacAddressString(uart, READ_DEVICE_MAC_ADDRESS)}')
 
-    print(readIpString(uart, READ_DEVICE_IP_ADDRESS))
-    print(readIpString(uart, READ_DEVICE_SUBNET_MASK))
-    print(readIpString(uart, READ_GATEWAY_IP_ADDRESS))
-    print(readIpString(uart, READ_DESTINATION_IP_1_ADDRESS))
-    print(readInt(uart, READ_SERIAL_PORT_1_BAUD_RATE))
-    print(readUartBitsString(uart, READ_SERIAL_PORT_1_STOP_CHECK_DATA_BITS))
-    print(readInt(uart, READ_SERIAL_PORT_1_TIMEOUT_TIME))
+    print("\nUART 1")
+    print("======")
 
-    print(readMacAddressString(uart, READ_DEVICE_MAC_ADDRESS))
+    print(f'Network mode:             {readInt(uart, READ_PORT_1_NETWORK_MODE)}')
+    print(f'Device port:              {readInt(uart, READ_DEVICE_PORT_1_NUMBER)}')
+    print(f'Destination port:         {readInt(uart, READ_DESTINATION_PORT_1_NUMBER)}')
+    print(f'Destination IP:           {readIpString(uart, READ_DESTINATION_IP_1_ADDRESS)}')
+    print(f'Baud rate:                {readInt(uart, READ_SERIAL_PORT_1_BAUD_RATE)}')
+    print(f'Bits (stop, check, data): {readUartBitsString(uart, READ_SERIAL_PORT_1_STOP_CHECK_DATA_BITS)}')
+    print(f'Timeout:                  {readInt(uart, READ_SERIAL_PORT_1_TIMEOUT_TIME)}ms')
+    
+    print("\nUART 2")
+    print("======")
 
-    print(readInt(uart, READ_PORT_2_NETWORK_MODE))
-    print(readInt(uart, READ_DEVICE_PORT_2_NUMBER))
-    print(readIpString(uart, READ_DESTINATION_IP_2_ADDRESS))
-    print(readInt(uart, READ_DESTINATION_PORT_2_NUMBER))
-    print(readInt(uart, READ_SERIAL_PORT_2_BAUD_RATE))
-    print(readUartBitsString(uart, READ_SERIAL_PORT_2_STOP_CHECK_DATA_BITS))
+    print(f'Network mode:             {readInt(uart, READ_PORT_2_NETWORK_MODE)}')
+    print(f'Device port:              {readInt(uart, READ_DEVICE_PORT_2_NUMBER)}')
+    print(f'Destination port:         {readInt(uart, READ_DESTINATION_PORT_2_NUMBER)}')
+    print(f'Destination IP:           {readIpString(uart, READ_DESTINATION_IP_2_ADDRESS)}')
+    print(f'Baud rate:                {readInt(uart, READ_SERIAL_PORT_2_BAUD_RATE)}')
+    print(f'Bits (stop, check, data): {readUartBitsString(uart, READ_SERIAL_PORT_2_STOP_CHECK_DATA_BITS)}')
+    print(f'Timeout:                  {readInt(uart, READ_SERIAL_PORT_2_TIMEOUT_TIME)}ms')
