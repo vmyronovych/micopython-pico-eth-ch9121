@@ -4,6 +4,17 @@ from machine import UART, Pin
 class ConfigReader:
     def __init__(self):
         self.__uart = UART(0, baudrate=9600, tx=Pin(0), rx=Pin(1))
+        self.__configPin = Pin(14, Pin.OUT,Pin.PULL_UP)
+
+    def begin_read(self):        
+        self.__uart.read(self.__uart.any()) # flusing uart buffer before reading settings
+        self.__configPin.value(0)
+        time.sleep(0.01)
+    
+    def end_read(self):
+        self.__leave_port_config_mode()
+        self.__configPin.value(0)
+        time.sleep(0.01)
 
     def device_ip(self):
         return self.__readIpString(0x61)
@@ -54,6 +65,9 @@ class ConfigReader:
     def port1_timeout(self):
         return self.__readInt(0x73)
     
+    def port2_enabled(self):
+        return self.__readInt(0x90)
+
     # Possible values: 
     #   0x00: TCP server
     #   0x01: TCP client
@@ -92,7 +106,7 @@ class ConfigReader:
         return self.__readInt(0x96)
     
     def print(self):
-        self.__uart.read() # flusing uart buffer before reading settings
+        self.begin_read()
 
         print("\nDevice Network")
         print("==============")
@@ -123,7 +137,13 @@ class ConfigReader:
         print(f'Baud rate:                {self.port2_uart_baud_rate()}')
         print(f'Bits (stop, check, data): {self.port2_uart_bits()}')
         print(f'Timeout:                  {self.port2_timeout()}ms')
+
+        self.end_read()
     
+    # Leave serial port configuration mode (Only on the serial port negotiating side Formula is valid)
+    def __leave_port_config_mode(self):
+        self.__read(0x5e)
+
     def __readIpString(self, command):
         ipBytes = self.__read(command)
         return "{}.{}.{}.{}".format(ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3])
@@ -149,4 +169,8 @@ class ConfigReader:
                 return self.__uart.read() # read response
             time.sleep(0.01) # sleep before checking for response again
 
-    
+
+# Print configuration when this module is run as standalone python script
+if __name__ == '__main__':
+    config = ConfigReader()
+    config.print()

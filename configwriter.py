@@ -1,6 +1,6 @@
 from machine import UART, Pin
 import time
-import configreader
+from pico_ch9121.config.reader import ConfigReader
 
 #Working mode of chip port 1
 #Methods:
@@ -106,6 +106,7 @@ time.sleep(0.1)
 
 CFG.value(0)
 
-configreader.printAll(uart0)
+configReader = ConfigReader()
+configReader.print()
 
 print("end printing configuration...\n")
