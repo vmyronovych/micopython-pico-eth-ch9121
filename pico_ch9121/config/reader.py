@@ -142,7 +142,7 @@ class ConfigReader:
     
     # Leave serial port configuration mode (Only on the serial port negotiating side Formula is valid)
     def __leave_port_config_mode(self):
-        self.__read(0x5e)
+        self.__uart.write(bytearray([0x57, 0xab, 0x5e]))
 
     def __readIpString(self, command):
         ipBytes = self.__read(command)
