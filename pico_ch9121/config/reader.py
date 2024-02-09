@@ -2,18 +2,16 @@ import time
 from machine import UART, Pin
 
 class ConfigReader:
-    def __init__(self):
-        self.__uart = UART(0, baudrate=9600, tx=Pin(0), rx=Pin(1))
+    def begin_read(self):
         self.__configPin = Pin(14, Pin.OUT,Pin.PULL_UP)
-
-    def begin_read(self):        
-        self.__uart.read(self.__uart.any()) # flusing uart buffer before reading settings
+        self.__uart = UART(0, baudrate=9600, tx=Pin(0), rx=Pin(1))        
         self.__configPin.value(0)
+        self.__uart.read(self.__uart.any()) # flusing uart buffer before reading settings
         time.sleep(0.01)
     
-    def end_read(self):
-        self.__leave_port_config_mode()
-        self.__configPin.value(0)
+    def end_read(self):        
+        #self.__leave_port_config_mode()
+        self.__configPin.value(1)
         time.sleep(0.01)
 
     def device_ip(self):
@@ -127,16 +125,16 @@ class ConfigReader:
         print(f'Bits (stop, check, data): {self.port1_uart_bits()}')
         print(f'Timeout:                  {self.port1_timeout()}ms')
         
-        print("\nUART 2")
-        print("======")
+        # print("\nUART 2")
+        # print("======")
 
-        print(f'Network mode:             {self.port2_network_mode()}')
-        print(f'Device port:              {self.port2_device_port_number()}')
-        print(f'Destination port:         {self.port2_destination_port_number()}')
-        print(f'Destination IP:           {self.port2_destination_ip()}')
-        print(f'Baud rate:                {self.port2_uart_baud_rate()}')
-        print(f'Bits (stop, check, data): {self.port2_uart_bits()}')
-        print(f'Timeout:                  {self.port2_timeout()}ms')
+        # print(f'Network mode:             {self.port2_network_mode()}')
+        # print(f'Device port:              {self.port2_device_port_number()}')
+        # print(f'Destination port:         {self.port2_destination_port_number()}')
+        # print(f'Destination IP:           {self.port2_destination_ip()}')
+        # print(f'Baud rate:                {self.port2_uart_baud_rate()}')
+        # print(f'Bits (stop, check, data): {self.port2_uart_bits()}')
+        # print(f'Timeout:                  {self.port2_timeout()}ms')
 
         self.end_read()
     
@@ -161,6 +159,7 @@ class ConfigReader:
         return "{},{},{}".format(ipBytes[0], ipBytes[1], ipBytes[2])
     
     def __read(self, command):
+        self.__uart.read(self.__uart.any()) # flusing uart buffer before reading settings
         fullCommand = [0x57, 0xab]
         fullCommand.append(command)
         self.__uart.write(bytearray(fullCommand))

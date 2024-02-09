@@ -2,23 +2,20 @@ import time
 from machine import UART, Pin
 
 class ConfigWriter:
-    def __init__(self):
-        self.__uart = UART(0, baudrate=9600, tx=Pin(0), rx=Pin(1))
-        self.__configPin = Pin(14, Pin.OUT,Pin.PULL_UP)
-        self.__resetPin = Pin(17, Pin.OUT,Pin.PULL_UP)
-
     def begin_config(self):
-        self.__uart.read(self.__uart.any()) # cleanup old data on a line
-        self.__resetPin.value(1)
+        self.__configPin = Pin(14, Pin.OUT,Pin.PULL_UP)
+        self.__uart = UART(0, baudrate=9600, tx=Pin(0), rx=Pin(1))        
+        time.sleep(0.1)
         self.__configPin.value(0)
         time.sleep(0.1)
+        self.__uart.read(self.__uart.any()) # cleanup old data on a line
 
     def end_config(self):
-        time.sleep(0.1)
         self.__save_to_eeprom()
         self.__execute_config_and_reset()
         self.__leave_port_config_mode()
         self.__configPin.value(1)
+        time.sleep(0.1)
 
     def device_ip(self, ip):
         return self.__writeIp(0x11, ip)
@@ -143,7 +140,7 @@ class ConfigWriter:
     def __write(self, command, value = None):
         fullCommand = [0x57, 0xab]
         fullCommand.append(command)
-
+        print(command) # this somehow makes config write work consistant
         if (value != None):
             for v in value:
                 fullCommand.append(v)
@@ -155,20 +152,20 @@ class ConfigWriter:
 # Write, read and print configuration when this module is run as standalone python script
 if __name__ == '__main__':
     from pico_ch9121.config import reader, writer
-    configReader = reader.ConfigReader()
-    configReader.print()
+    # configReader = reader.ConfigReader()
+    # configReader.print()
 
     configWriter = writer.ConfigWriter()
     configWriter.begin_config()
 
-    configWriter.device_ip("192.168.0.30")
+    configWriter.device_ip("192.168.0.27")
     configWriter.gateway_ip("192.168.0.1")
     configWriter.subnet_mask("255.255.0.127")
 
-    configWriter.port1_network_mode(2)
+    configWriter.port1_network_mode(0x01)
     configWriter.port1_device_port_number(5001)
     configWriter.port1_destination_port_number(6970)
-    configWriter.port1_destination_ip("192.168.0.148")
+    configWriter.port1_destination_ip("192.168.0.158")
     configWriter.port1_uart_baud_rate(9600)
     configWriter.port1_uart_bits(1, 4, 8)
     configWriter.port1_timeout(5)
@@ -177,13 +174,14 @@ if __name__ == '__main__':
     configWriter.port2_network_mode(2)
     configWriter.port2_device_port_number(5001)
     configWriter.port2_destination_port_number(6971)
-    configWriter.port2_destination_ip("192.168.1.72")
+    configWriter.port2_destination_ip("192.168.1.76")
     configWriter.port2_uart_baud_rate(9600)
     configWriter.port2_uart_bits(1, 4, 8)
     configWriter.port2_timeout(5)
 
     configWriter.end_config()
 
+    configReader = reader.ConfigReader()
     configReader.print()
 
 

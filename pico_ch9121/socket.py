@@ -5,7 +5,9 @@ import time
 
 class ClientSocket:
     def __init__(self, destinationIp, destinationPortNumber):
+        print("\fNew client socket")
         configWriter = ConfigWriter()
+        print("\fNew client socket: begin_config")
         configWriter.begin_config()
         configWriter.port1_destination_ip(destinationIp)
         configWriter.port1_destination_port_number(destinationPortNumber)
@@ -13,23 +15,40 @@ class ClientSocket:
         
         configReader = ConfigReader()
         configReader.begin_read()
-        uartBaudRate = configReader.port1_uart_baud_rate()
+        uartBaudRate = configReader.port1_uart_baud_rate()        
+        print(f'Destination port: {configReader.port1_destination_port_number()}')
+        print(f'Destination IP:   {configReader.port1_destination_ip()}')
+        print(f'Baud rate:        {uartBaudRate}')
+        print()
         configReader.end_read()
 
         self.__uart = UART(0, baudrate=uartBaudRate, tx=Pin(0), rx=Pin(1))
+        # self.__uart = UART(0, baudrate=9600, tx=Pin(0), rx=Pin(1))
+        
+        configPin = Pin(14, Pin.OUT,Pin.PULL_UP)
+        resetPin = Pin(17, Pin.OUT,Pin.PULL_UP)
+        configPin.value(1)
+        print("resetting CH9121")
+        resetPin.value(0)
+        time.sleep(1)
+        resetPin.value(1)
+        time.sleep(1)
+        print("reset is done")
 
     def send(self, data):
         # send request
         self.__uart.write(data)
 
         # wait for response synchronously
-        waitTimeoutMs = 50
+        waitTimeoutMs = 100
         sleepMs = 1
         sleepSeconds = sleepMs / 1000
+        print(sleepSeconds)
         waitedMs = 0
         while True:
             if waitedMs > waitTimeoutMs:
                 print("Wait timeout")
+                print(waitedMs)
                 return None
             time.sleep(sleepSeconds)
             waitedMs += sleepMs
@@ -38,23 +57,33 @@ class ClientSocket:
                 print(responseData)
                 return responseData
 
-# Print configuration when this module is run as standalone python script
+# ClientSocket usage example
 if __name__ == '__main__':
+
+    from pico_ch9121 import config
+    from pico_ch9121.config import reader, writer
+    
+    configWriter = writer.ConfigWriter()
+    configWriter.begin_config()
+
+    configWriter.device_ip("192.168.1.30")
+    configWriter.gateway_ip("192.168.1.1")
+    configWriter.subnet_mask("255.255.255.0")
+
+    configWriter.port1_network_mode(0x01)
+    configWriter.port1_device_port_number(5000)
+    configWriter.port1_uart_baud_rate(9600)
+    configWriter.port1_uart_bits(1, 4, 8)
+    
+    configWriter.end_config()
+
+    configReader = reader.ConfigReader()
+    configReader.print()
+
     from pico_ch9121.socket import ClientSocket
-    socket = ClientSocket("192.168.1.40", 6969)
-    response = socket.send("Hello")
-    print(response)
+    socket = ClientSocket("192.168.1.51", 6969)
 
-# uart0 = UART(0, baudrate=9600, tx=Pin(0), rx=Pin(1))
-# CFG = Pin(14, Pin.OUT,Pin.PULL_UP)
-# RST = Pin(17, Pin.OUT,Pin.PULL_UP)
-# CFG.value(1)
-# RST.value(1)
-
-# while True:
-#     uart0.write("hello from pico")
-#     while uart0.any() > 0:
-#         rxData0 = uart0.read()
-#         uart0.write(rxData0)
-#         print(rxData0)
-#     time.sleep(10)
+    while True:
+        response = socket.send("Hello")
+        print(response)
+        time.sleep(10)
