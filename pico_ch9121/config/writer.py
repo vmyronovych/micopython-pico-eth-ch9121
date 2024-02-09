@@ -1,8 +1,10 @@
 import time
 from machine import UART, Pin
 
+OFF = 0x1
+
 class ConfigWriter:
-    def begin_config(self):
+    def begin(self):
         self.__configPin = Pin(14, Pin.OUT,Pin.PULL_UP)
         self.__uart = UART(0, baudrate=9600, tx=Pin(0), rx=Pin(1))        
         time.sleep(0.1)
@@ -10,18 +12,24 @@ class ConfigWriter:
         time.sleep(0.1)
         self.__uart.read(self.__uart.any()) # cleanup old data on a line
 
-    def end_config(self):
+    def end(self):
         self.__save_to_eeprom()
         self.__execute_config_and_reset()
         self.__leave_port_config_mode()
         self.__configPin.value(1)
         time.sleep(0.1)
 
-    def enableDHCP(self):
-        self.__write(0x33, [0x01])
+    def dhcp_on(self):
+        self.dhcp_switch(0x01)
 
-    def disableDHCP(self):
-        self.__write(0x33, [0x00])
+    def dhcp_off(self):
+        self.dhcp_switch(0x00)
+    
+    # Turn DHCP on/off
+    # 0x00 - off
+    # 0x01 - on
+    def dhcp_switch(self, val):
+        self.__write(0x33, [val])
 
     def device_ip(self, ip):
         return self.__writeIp(0x11, ip)
@@ -32,30 +40,46 @@ class ConfigWriter:
     def gateway_ip(self, ip):
         return self.__writeIp(0x13, ip)
     
+    # Set network mode to TCP Server for serial port 1
+    def p1_tcp_server(self):
+        return self.p1_mode(0x00)
+    
+    # Set network mode to TCP Client for serial port 1
+    def p1_tcp_client(self):
+        return self.p1_mode(0x01)
+    
+    # Set network mode to UDP Server for serial port 1
+    def p1_udp_server(self):
+        return self.p1_mode(0x02)
+    
+    # Set network mode to UDP Client for serial port 1
+    def p1_udp_client(self):
+        return self.p1_mode(0x03)
+    
     # Possible values: 
     #   0x00: TCP server
     #   0x01: TCP client
     #   0x02: UDP server
     #   0x03: UDP client
-    def port1_network_mode(self, mode):
+    def p1_mode(self, mode):
         return self.__writeOneByteInt(0x10, mode)
     
-    def port1_device_port_number(self, portNumber):
+    def p1_device_port(self, portNumber):
         return self.__writeTwoBytesInt(0x14, portNumber)
     
-    def port1_destination_port_number(self, portNumber):
+    def p1_dest_port(self, portNumber):
         return self.__writeTwoBytesInt(0x16, portNumber)
     
-    def port1_destination_ip(self, ip):
+    def p1_dest_ip(self, ip):
         return self.__writeIp(0x15, ip)
     
-    # UART0 serial port Baud Rate
+    # Set Baud Rate for serial port 1
     # for chip configuration mode the rate is always 9600
     # once chip exits configuration mode the baud rate will match the one set by this method
-    def port1_uart_baud_rate(self, baudRate):
+    def p1_baud_rate(self, baudRate):
         return self.__writeFourBytesInt(0x21, baudRate)
     
-    # Set port 1 serial port calibration bit, data bit, stop bit
+    # Configure serial 1: calibration bit, data bit, stop bit
     # 0x01 0x04 0x08
     # (1stop,noproofreading,8data)
     # Check:: 
@@ -64,42 +88,66 @@ class ConfigWriter:
     #   0x02: mark
     #   0x03: Space
     #   0x04: None
-    def port1_uart_bits(self, stop, pairty, data):
+    def p1_uart_bits(self, stop, pairty, data):
         return self.__write(0x22, [stop, pairty, data])
     
-    # Serial port's timeout time in milliseconds
+    # Set timeout for serial port 1 in milliseconds
     # 0x01 (Serial timeout 1*5ms)
-    def port1_timeout(self, timeoutMs):
+    def p1_timeout(self, timeoutMs):
         return self.__writeFourBytesInt(0x23, timeoutMs)
     
-    # Turn on/off port 2
-    # 0x01: open
-    # 0x00: close
-    def port2_enabled(self, enabled):
-        return self.__writeOneByteInt(0x39, enabled)
+    # Turn on port 2
+    def p2_on(self):
+        return self.p2_toggle(0x01)
+    
+    # Turn off port 2
+    def p2_off(self):
+        return self.p2_toggle(0x00)
+    
+    # Turn port 2 on/off
+    # 0x00 - off
+    # 0x01 - on
+    def p2_toggle(self, val):
+        return self.__writeOneByteInt(0x39, val)
+    
+    # Set network mode to TCP Server for serial port 2
+    def p2_tcp_server(self):
+        return self.p2_mode(0x00)
+    
+    # Set network mode to TCP Client for serial port 2
+    def p2_tcp_client(self):
+        return self.p2_mode(0x01)
+    
+    # Set network mode to UDP Server for serial port 2
+    def p2_udp_server(self):
+        return self.p2_mode(0x02)
+    
+    # Set network mode to UDP Client for serial port 2
+    def p2_udp_client(self):
+        return self.p2_mode(0x03)
 
     # Possible values: 
     #   0x00: TCP server
     #   0x01: TCP client
     #   0x02: UDP server
     #   0x03: UDP client
-    def port2_network_mode(self, mode):
+    def p2_mode(self, mode):
         return self.__writeOneByteInt(0x40, mode)
     
-    def port2_device_port_number(self, portNumber):
+    def p2_device_port(self, portNumber):
         return self.__writeTwoBytesInt(0x41, portNumber)
     
-    def port2_destination_port_number(self, portNumber):
+    def p2_dest_port(self, portNumber):
         return self.__writeTwoBytesInt(0x43, portNumber)
     
-    def port2_destination_ip(self, ip):
+    def p2_dest_ip(self, ip):
         return self.__writeIp(0x42, ip)
     
-    # UART1 serial port Baud Rate
-    def port2_uart_baud_rate(self, baudRate):
+    # Set Baud Rate for serial port 2
+    def p2_baud_rate(self, baudRate):
         return self.__writeFourBytesInt(0x44, baudRate)
     
-    # Set port 1 serial port calibration bit, data bit, stop bit
+    # Configure serial port 12 calibration bit, data bit, stop bit
     # 0x01 0x04 0x08
     # (1stop,noproofreading,8data)
     # Check:: 
@@ -108,12 +156,12 @@ class ConfigWriter:
     #   0x02: mark
     #   0x03: Space
     #   0x04: None
-    def port2_uart_bits(self, stop, pairty, data):
+    def p2_uart_bits(self, stop, pairty, data):
         return self.__write(0x45, [stop, pairty, data])
     
-    # Serial port's timeout time in milliseconds
+    # Set timeout for serial port 2 in milliseconds
     # 0x01 (Serial timeout 1*5ms)
-    def port2_timeout(self, timeoutMs):
+    def p2_timeout(self, timeoutMs):
         return self.__writeFourBytesInt(0x46, timeoutMs)
     
     # Save parameters to EEPROM
@@ -162,30 +210,30 @@ if __name__ == '__main__':
     # configReader.print()
 
     configWriter = writer.ConfigWriter()
-    configWriter.begin_config()
+    configWriter.begin()
 
     configWriter.device_ip("192.168.0.27")
     configWriter.gateway_ip("192.168.0.1")
     configWriter.subnet_mask("255.255.0.127")
 
-    configWriter.port1_network_mode(0x01)
-    configWriter.port1_device_port_number(5001)
-    configWriter.port1_destination_port_number(6970)
-    configWriter.port1_destination_ip("192.168.0.158")
-    configWriter.port1_uart_baud_rate(9600)
-    configWriter.port1_uart_bits(1, 4, 8)
-    configWriter.port1_timeout(5)
+    configWriter.p1_tcp_client()
+    configWriter.p1_device_port(5001)
+    configWriter.p1_dest_port(6970)
+    configWriter.p1_dest_ip("192.168.0.158")
+    configWriter.p1_baud_rate(9600)
+    configWriter.p1_uart_bits(1, 4, 8)
+    configWriter.p1_timeout(5)
 
-    configWriter.port2_enabled(1)
-    configWriter.port2_network_mode(2)
-    configWriter.port2_device_port_number(5001)
-    configWriter.port2_destination_port_number(6971)
-    configWriter.port2_destination_ip("192.168.1.76")
-    configWriter.port2_uart_baud_rate(9600)
-    configWriter.port2_uart_bits(1, 4, 8)
-    configWriter.port2_timeout(5)
+    configWriter.p2_on()
+    configWriter.p2_tcp_server()
+    configWriter.p2_device_port(5001)
+    configWriter.p2_dest_port(6971)
+    configWriter.p2_dest_ip("192.168.1.76")
+    configWriter.p2_baud_rate(9600)
+    configWriter.p2_uart_bits(1, 4, 8)
+    configWriter.p2_timeout(5)
 
-    configWriter.end_config()
+    configWriter.end()
 
     configReader = reader.ConfigReader()
     configReader.print()

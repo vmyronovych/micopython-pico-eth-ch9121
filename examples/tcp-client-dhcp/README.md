@@ -26,3 +26,7 @@ socket = ClientSocket("192.168.1.51", 6969) #"192.168.1.51" - mast be IP address
 ```
 
 If you are on linux/ubuntu then one way to get IP address of your TCP server is to run `ip addr` command, e.g.: `ip addr | grep "192"`
+
+If you use `vscode` + [MicroPico](vscode:extension/paulober.pico-w-go) extension the all you need to run this example:
+ - upload project to pico using [MicroPico](vscode:extension/paulober.pico-w-go) extension
+ - Open [main.py](./main.py) file in `vscode` and press `run` (The button which is provided by [MicroPico](vscode:extension/paulober.pico-w-go) extension)
