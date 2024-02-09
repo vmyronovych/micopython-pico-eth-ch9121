@@ -17,6 +17,12 @@ class ConfigWriter:
         self.__configPin.value(1)
         time.sleep(0.1)
 
+    def enableDHCP(self):
+        self.__write(0x33, [0x01])
+
+    def disableDHCP(self):
+        self.__write(0x33, [0x00])
+
     def device_ip(self, ip):
         return self.__writeIp(0x11, ip)
     

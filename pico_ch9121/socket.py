@@ -66,7 +66,8 @@ if __name__ == '__main__':
     configWriter = writer.ConfigWriter()
     configWriter.begin_config()
 
-    configWriter.device_ip("192.168.1.30")
+    configWriter.enableDHCP()
+    #configWriter.device_ip("192.168.1.30")
     configWriter.gateway_ip("192.168.1.1")
     configWriter.subnet_mask("255.255.255.0")
 
