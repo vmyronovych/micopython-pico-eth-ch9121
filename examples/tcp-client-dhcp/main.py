@@ -1,7 +1,7 @@
 import time
 from pico_eth_ch9121 import config
 from pico_eth_ch9121.config import reader, writer
-from pico_eth_ch9121.socket import TcpClientSocket
+from pico_eth_ch9121.tcp_client_socket import TcpClientSocket
 
 start = time.time_ns()
 
