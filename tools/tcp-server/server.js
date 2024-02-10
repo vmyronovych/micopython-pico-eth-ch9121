@@ -4,22 +4,40 @@ var HOST = '0.0.0.0';
 var PORT = 6969;
 
 net.createServer(function(socket) {
+
     logDevice("CONNECTED");
+    response("OK")
     
     socket.on("data", function(data) {
-        logDevice(data);
+        logDeviceRequest(data);
+        response("OK")
     });
 
     socket.on("close", function(data) {
         logDevice("DISCONNECTED")
     });
+    
+    function response(msg) {
+        socket.write(msg);
+        logDeviceResponse(msg)
+    }
 
-    socket.write(`HELLO ${socket.remoteAddress}:${socket.remotePort}`);
+    function logDeviceRequest(msg) {
+        var deviceName = `${socket.remoteAddress}:${socket.remotePort}`;
+        console.log(`DEVICE[${deviceName}]: >> ${msg}`);
+    }
+
+    function logDeviceResponse(msg) {
+        var deviceName = `${socket.remoteAddress}:${socket.remotePort}`;
+        console.log(`DEVICE[${deviceName}]: << ${msg}`);
+    }
 
     function logDevice(msg) {
         var deviceName = `${socket.remoteAddress}:${socket.remotePort}`;
         console.log(`DEVICE[${deviceName}]: ${msg}`);
     }
+
+    
 
 }).listen(PORT, HOST);
 

@@ -1,9 +1,11 @@
 import time
 from pico_ch9121 import config
 from pico_ch9121.config import reader, writer
-from pico_ch9121.socket import ClientSocket
+from pico_ch9121.socket import TcpClientSocket
 
-# CH9121 configuration
+start = time.time_ns()
+
+# ch9121 configuration
 cw = writer.ConfigWriter()
 cw.begin()
 cw.dhcp_on() # Enable DHCP on CH9121 so the chip can automatically obtain IP address from your DHCP server (e.g. from home's router)
@@ -14,13 +16,15 @@ cw.end()
 
 # Print current configuration of CH9121
 cr = reader.ConfigReader()
-cr.print()
+cr.print_net()
+cr.print_p1()
+
+print(f'ELAPSED: {(time.time_ns() - start)/1000000000}')
 
 # Prepare socket for communication
-socket = ClientSocket("192.168.1.51", 6969) # Change ip and port here to the ip and port of your TCP Server
+socket = TcpClientSocket("192.168.1.51", 6969) # Change ip and port here to the ip and port of your TCP Server
 
-# Send and read data to/from TCP Server
+# Send and receive data every 2 seconds
 while True:
-    response = socket.send("Hello from CH9121")
-    print(response)
-    time.sleep(10)
+    print(f'tx:{socket.send_utf8_str("Hello from CH9121")}|rx:{socket.receive_sync(0.01)}')
+    time.sleep(2)

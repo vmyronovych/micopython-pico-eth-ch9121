@@ -3,88 +3,87 @@ from pico_ch9121.config.writer import ConfigWriter
 from pico_ch9121.config.reader import ConfigReader
 import time
 
-class ClientSocket:
+class TcpClientSocket:
     def __init__(self, destinationIp, destinationPortNumber):
-        print("\fNew client socket")
-        configWriter = ConfigWriter()
-        print("\fNew client socket: begin_config")
-        configWriter.begin()
-        configWriter.p1_dest_ip(destinationIp)
-        configWriter.p1_dest_port(destinationPortNumber)
-        configWriter.end()
-        
-        configReader = ConfigReader()
-        configReader.begin()
-        uartBaudRate = configReader.p1_baud_rate()        
-        print(f'Destination port: {configReader.p1_dest_port()}')
-        print(f'Destination IP:   {configReader.p1_dest_ip()}')
-        print(f'Baud rate:        {uartBaudRate}')
-        print()
-        configReader.end()
+        cw = ConfigWriter()
+        cw.begin()
+        cw.p1_dest_ip(destinationIp)
+        cw.p1_dest_port(destinationPortNumber)
+        cw.end()
 
-        self.__uart = UART(0, baudrate=uartBaudRate, tx=Pin(0), rx=Pin(1))
-        
+        cr = ConfigReader()
+        cr.begin()
+        baud_rate = cr.p1_baud_rate()
+        dest_ip = cr.p1_dest_ip()
+        dest_port = cr.p1_dest_port()
+        print(f"soc|new|{dest_ip}:{dest_port}|{baud_rate}")
+        cr.end()
+
+        self.__uart = UART(0, baudrate=baud_rate, tx=Pin(0), rx=Pin(1))
+
         configPin = Pin(14, Pin.OUT,Pin.PULL_UP)
         configPin.value(1)
 
-        print("resetting CH9121")
+        print("ch9121|reset|start")
         resetPin = Pin(17, Pin.OUT,Pin.PULL_UP)
         resetPin.value(0)
-        time.sleep(1)
+        time.sleep(.1)
         resetPin.value(1)
-        time.sleep(1)
-        print("reset is done")
+        time.sleep(.1)
+        print("ch9121|reset|done")
 
-    def send(self, data):
-        # send request
-        self.__uart.write(data)
+    def send_utf8_str(self, data):
+        return self.__uart.write(bytes(data, "UTF-8"))
 
-        # wait for response synchronously
-        waitTimeoutMs = 100
-        sleepMs = 1
-        sleepSeconds = sleepMs / 1000
-        print(sleepSeconds)
-        waitedMs = 0
+    # waits synchronously until data recieved or timeout happened
+    def receive_sync(self, timeout):
+        sleep = 0.001
+        waited = 0
+
+        buff = []
+
         while True:
-            if waitedMs > waitTimeoutMs:
-                print("Wait timeout")
-                print(waitedMs)
-                return None
-            time.sleep(sleepSeconds)
-            waitedMs += sleepMs
-            if self.__uart.any() > 0:
-                responseData = self.__uart.read(self.__uart.any())
-                print(responseData)
-                return responseData
+            while self.__uart.any() > 0:
+                buff.append(self.__uart.read(self.__uart.any()))
 
-# ClientSocket usage example
+            if (len(buff) > 0):
+                return buff
+
+            time.sleep(sleep)
+
+            if waited > timeout:
+                return None
+
+            waited += sleep
+
+# TcpClientSocket usage example
 if __name__ == '__main__':
 
     from pico_ch9121 import config
     from pico_ch9121.config import reader, writer
-    
-    configWriter = writer.ConfigWriter()
-    configWriter.begin()
 
-    configWriter.dhcp_on()
-    #configWriter.device_ip("192.168.1.30")
-    configWriter.gateway_ip("192.168.1.1")
-    configWriter.subnet_mask("255.255.255.0")
+    cw = writer.ConfigWriter()
+    cw.begin()
 
-    configWriter.p1_tcp_client()
-    configWriter.p1_device_port(5000)
-    configWriter.p1_baud_rate(9600)
-    configWriter.p1_uart_bits(1, 4, 8)
-    
-    configWriter.end()
+    cw.dhcp_on()
+    cw.gateway_ip("192.168.1.1")
+    cw.subnet_mask("255.255.255.0")
 
-    configReader = reader.ConfigReader()
-    configReader.print()
+    cw.p1_tcp_client()
+    cw.p1_device_port(5000)
+    cw.p1_baud_rate(9600)
+    cw.p1_uart_bits(1, 4, 8)
+
+    cw.end()
+
+    cr = reader.ConfigReader()
+    cr.print_net()
+    cr.print_p1()
 
     from pico_ch9121.socket import ClientSocket
-    socket = ClientSocket("192.168.1.51", 6969)
+    socket = TcpClientSocket("192.168.1.51", 6969)
 
     while True:
-        response = socket.send("Hello")
-        print(response)
-        time.sleep(10)
+        print(f'sent bytes: {socket.send_utf8_str("Hello")}')
+        print(f'resp: {socket.receive_sync(0.01)}')
+        time.sleep(5)
