@@ -1,6 +1,6 @@
 from machine import UART, Pin
 import time
-from pico_ch9121.config.reader import ConfigReader
+from pico_eth_ch9121.config.reader import ConfigReader
 
 #Working mode of chip port 1
 #Methods:
