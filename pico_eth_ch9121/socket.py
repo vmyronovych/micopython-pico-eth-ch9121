@@ -1,6 +1,6 @@
 from machine import UART, Pin
-from pico_ch9121.config.writer import ConfigWriter
-from pico_ch9121.config.reader import ConfigReader
+from pico_eth_ch9121.config.writer import ConfigWriter
+from pico_eth_ch9121.config.reader import ConfigReader
 import time
 
 class TcpClientSocket:
@@ -59,8 +59,8 @@ class TcpClientSocket:
 # TcpClientSocket usage example
 if __name__ == '__main__':
 
-    from pico_ch9121 import config
-    from pico_ch9121.config import reader, writer
+    from pico_eth_ch9121 import config
+    from pico_eth_ch9121.config import reader, writer
 
     cw = writer.ConfigWriter()
     cw.begin()
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     cr.print_net()
     cr.print_p1()
 
-    from pico_ch9121.socket import ClientSocket
+    from pico_eth_ch9121.socket import TcpClientSocket
     socket = TcpClientSocket("192.168.1.51", 6969)
 
     while True:

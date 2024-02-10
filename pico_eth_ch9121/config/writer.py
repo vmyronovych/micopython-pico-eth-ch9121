@@ -206,7 +206,7 @@ class ConfigWriter:
 
 # Write, read and print configuration when this module is run as standalone python script
 if __name__ == '__main__':
-    from pico_ch9121.config import reader, writer
+    from pico_eth_ch9121.config import reader, writer
 
     cw = writer.ConfigWriter()
     cw.begin()
