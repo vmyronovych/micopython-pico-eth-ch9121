@@ -36,25 +36,23 @@ class TcpClientSocket:
         return self.__uart.write(bytes(data, "UTF-8"))
 
     # waits synchronously until data recieved or timeout happened
+    # timeout is in seconds
     def receive_sync(self, timeout):
-        sleep = 0.001
-        waited = 0
 
         buff = []
 
+        start = time.time_ns()
+        timeoutNs = timeout * 1000000000
         while True:
             while self.__uart.any() > 0:
-                buff.append(self.__uart.read(self.__uart.any()))
+                buff.append(self.__uart.read())
 
             if (len(buff) > 0):
                 return buff
 
-            time.sleep(sleep)
-
-            if waited > timeout:
+            if (time.time_ns() - start) >= timeoutNs:
                 return None
 
-            waited += sleep
 
 # TcpClientSocket usage example
 if __name__ == '__main__':
