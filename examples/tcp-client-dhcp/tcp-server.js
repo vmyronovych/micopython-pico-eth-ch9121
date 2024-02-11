@@ -37,8 +37,6 @@ net.createServer(function(socket) {
         console.log(`DEVICE[${deviceName}]: ${msg}`);
     }
 
-    
-
 }).listen(PORT, HOST);
 
 
