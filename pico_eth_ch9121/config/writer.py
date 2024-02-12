@@ -40,6 +40,14 @@ class ConfigWriter:
     def gateway_ip(self, ip):
         return self.__write_ip(0x13, ip)
 
+    # Set port 1 connect the network connection
+    def p1_tcp_connect(self):
+        return self.__write_one_byte_int(0x24, 0x00)
+
+    # Set port 1 disconnect the network connection
+    def p1_tcp_disconnect(self):
+        return self.__write_one_byte_int(0x24, 0x01)
+
     # Set network mode to TCP Server for serial port 1
     def p1_tcp_server(self):
         return self.p1_mode(0x00)
