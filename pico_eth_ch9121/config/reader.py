@@ -63,6 +63,13 @@ class ConfigReader:
     # 0x01 (Serial timeout 1*5ms)
     def p1_timeout(self):
         return self.__read_int(0x73)
+    
+    # Query port 1 TCP connection status
+    # Possible values:
+    #   0x00:TCP Disconnect
+    #   0x01:TCP Connect
+    def p1_tcp_conn_status(self):
+        return self.__read_int(0x03)
 
     def p2_enabled(self):
         return self.__read_int(0x90)

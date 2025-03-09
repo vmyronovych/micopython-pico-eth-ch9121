@@ -9,6 +9,7 @@ class TcpClientSocket:
         cw.begin()
         cw.p1_dest_ip(destinationIp)
         cw.p1_dest_port(destinationPortNumber)
+        # cw.p1_tcp_connect()
         cw.end()
 
         cr = ConfigReader()
@@ -17,6 +18,11 @@ class TcpClientSocket:
         dest_ip = cr.p1_dest_ip()
         dest_port = cr.p1_dest_port()
         print(f"soc|new|{dest_ip}:{dest_port}|{baud_rate}")
+        while cr.p1_tcp_conn_status() != 1:
+            print(".", end="")
+            time.sleep(.2)
+        print("\nconnected")
+            
         cr.end()
 
         self.__uart = UART(0, baudrate=baud_rate, tx=Pin(0), rx=Pin(1))
@@ -24,13 +30,19 @@ class TcpClientSocket:
         configPin = Pin(14, Pin.OUT,Pin.PULL_UP)
         configPin.value(1)
 
-        print("ch9121|reset|start")
-        resetPin = Pin(17, Pin.OUT,Pin.PULL_UP)
-        resetPin.value(0)
-        time.sleep(.1)
-        resetPin.value(1)
-        time.sleep(.1)
-        print("ch9121|reset|done")
+        # print("ch9121|reset|start")
+        # resetPin = Pin(17, Pin.OUT,Pin.PULL_UP)
+        # resetPin.value(0)
+        # time.sleep(.1)
+        # resetPin.value(1)
+        # time.sleep(.1)
+        # print("ch9121|reset|done")
+
+    def get_uart(self):
+        return self.__uart
+
+    def send_bytes(self, data):
+        return self.__uart.write(data)
 
     def send_utf8_str(self, data):
         return self.__uart.write(bytes(data, "UTF-8"))
@@ -53,6 +65,11 @@ class TcpClientSocket:
             if (time.time_ns() - start) >= timeoutNs:
                 return None
 
+    def disconnect(self):
+        cw = ConfigWriter()
+        cw.begin()
+        cw.p1_tcp_disconnect()
+        cw.end()
 
 # TcpClientSocket usage example
 if __name__ == '__main__':
