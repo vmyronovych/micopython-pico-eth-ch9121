@@ -30,13 +30,19 @@ class TcpClientSocket:
         configPin = Pin(14, Pin.OUT,Pin.PULL_UP)
         configPin.value(1)
 
-        print("ch9121|reset|start")
-        resetPin = Pin(17, Pin.OUT,Pin.PULL_UP)
-        resetPin.value(0)
-        time.sleep(.1)
-        resetPin.value(1)
-        time.sleep(.1)
-        print("ch9121|reset|done")
+        # print("ch9121|reset|start")
+        # resetPin = Pin(17, Pin.OUT,Pin.PULL_UP)
+        # resetPin.value(0)
+        # time.sleep(.1)
+        # resetPin.value(1)
+        # time.sleep(.1)
+        # print("ch9121|reset|done")
+
+    def get_uart(self):
+        return self.__uart
+
+    def send_bytes(self, data):
+        return self.__uart.write(data)
 
     def send_utf8_str(self, data):
         return self.__uart.write(bytes(data, "UTF-8"))

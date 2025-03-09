@@ -2,6 +2,7 @@ import time
 from pico_eth_ch9121 import config
 from pico_eth_ch9121.config import reader, writer
 from pico_eth_ch9121.tcp_client_socket import TcpClientSocket
+from examples.mqtt.mqtt import ConnectPacket
 
 start = time.time_ns()
 
@@ -23,4 +24,18 @@ cr.print_p1()
 print(f'ELAPSED: {(time.time_ns() - start)/1000000000}')
 
 # Prepare socket for communication
-socket = TcpClientSocket("192.168.1.51", 1883) # Change ip to the ip of mosquitto
+socket = TcpClientSocket("192.168.1.51", 1884) # Change ip to the ip of mosquitto
+
+time.sleep(1) # sometime it takes longer to establish TCP connection
+
+# uart = socket.get_uart()
+# uart.write(bytes([0b00000001, 0b00000010, 0b00000011]))
+
+conn = ConnectPacket()
+
+for b in conn.getBytes():
+    socket.send_bytes(bytes([b]))
+
+# while True:
+#     time.sleep(5)
+#     print(socket.receive_sync(1))
